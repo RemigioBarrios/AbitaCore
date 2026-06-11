@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import path from 'path'; // <-- Importación del módulo nativo para rutas
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import { configureDataContainer, DataMode, MySQLConnection } from '@abitia/data';
@@ -22,6 +23,12 @@ const PORT = process.env.PORT || 3000;
 app.set('trust proxy', 1);
 app.use(cors());
 app.use(express.json());
+
+// ============================================================================
+// SERVIDOR DE ARCHIVOS ESTÁTICOS (El Monolito Ligero)
+// Sube un nivel desde 'src/' (o 'dist/') para encontrar la carpeta 'public'
+// ============================================================================
+app.use(express.static(path.join(__dirname, '../public')));
 
 // ============================================================================
 // 1. HSTS + CLASIFICACION Y RESOLUCION DE HOST (todas las peticiones)
@@ -75,12 +82,12 @@ app.post('/api/seed', async (_req, res) => {
     const store: any = container.resolve(LocalStore);
     store.reset();
 
-    const cRepo      = container.resolve('ICondominioRepository') as any;
-    const uRepo      = container.resolve('IUsuarioRepository') as any;
-    const pRepo      = container.resolve('IPropiedadRepository') as any;
-    const gRepo      = container.resolve('IGastoCondominioRepository') as any;
-    const pagoRepo   = container.resolve('IPagoReportadoRepository') as any;
-    const reciboSvc  = container.resolve('IReciboService') as any;
+    const cRepo = container.resolve('ICondominioRepository') as any;
+    const uRepo = container.resolve('IUsuarioRepository') as any;
+    const pRepo = container.resolve('IPropiedadRepository') as any;
+    const gRepo = container.resolve('IGastoCondominioRepository') as any;
+    const pagoRepo = container.resolve('IPagoReportadoRepository') as any;
+    const reciboSvc = container.resolve('IReciboService') as any;
 
     const idCondo = await cRepo.create({
       Nombre: 'Residencias Casa-10', Rif_IdFiscal: 'J-12345678-9',

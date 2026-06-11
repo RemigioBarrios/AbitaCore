@@ -4,8 +4,9 @@ import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import bcrypt from 'bcryptjs';
 
-// Carga el .env desde la raíz del proyecto (dos niveles arriba de src/ o dist/)
-require('dotenv').config({ path: require('path').join(__dirname, '../../.env') });
+// Carga .env.production en producción, .env en local
+const _envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env';
+require('dotenv').config({ path: require('path').join(__dirname, `../../${_envFile}`) });
 
 
 import { configureDataContainer, DataMode, MySQLConnection } from '@abitia/data';

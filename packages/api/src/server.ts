@@ -2,12 +2,22 @@ import 'reflect-metadata';
 import path from 'path'; // <-- Importación del módulo nativo para rutas
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import bcrypt from 'bcryptjs';
 
-// Cargar variables de entorno del archivo .env
-dotenv.config({ path: path.join(__dirname, '../../../.env') });
-dotenv.config();
+// Carga las variables de entorno si dotenv está disponible
+try {
+  const fs = require('fs');
+  const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env';
+  const envPath = path.join(__dirname, '../../../', envFile);
+  
+  if (fs.existsSync(envPath)) {
+    require('dotenv').config({ path: envPath });
+  } else {
+    require('dotenv').config();
+  }
+} catch (err) {
+  // Ignorar pacíficamente si dotenv no está instalado (por ejemplo, en producción pura)
+}
 
 import { configureDataContainer, DataMode, MySQLConnection } from '@abitia/data';
 import { configureServicesContainer } from '@abitia/services';

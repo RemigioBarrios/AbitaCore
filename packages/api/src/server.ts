@@ -8,16 +8,33 @@ try {
   const fs = require('fs');
   const path = require('path');
 
-  // Apunta directamente a la carpeta donde vive el archivo actual
-  const envPath = path.join(__dirname, '.env');
+  const _envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env';
+  
+  const candidates = [
+    path.join(__dirname, _envFile),
+    path.join(__dirname, '..', _envFile),
+    path.join(__dirname, '..', '..', _envFile),
+    path.join(__dirname, '.env'),
+    path.join(__dirname, '..', '.env'),
+    path.join(__dirname, '..', '..', '.env'),
+  ];
 
-  if (fs.existsSync(envPath)) {
-    require('dotenv').config({ path: envPath });
-    console.log('[Abitia API] dotenv OK');
+  let loaded = false;
+  for (const p of candidates) {
+    if (fs.existsSync(p)) {
+      require('dotenv').config({ path: p });
+      console.log(`[Abitia API] dotenv cargado desde: ${p}`);
+      loaded = true;
+      break;
+    }
+  }
+  if (!loaded) {
+    console.log('[Abitia API] No se encontró ningún archivo .env válido.');
   }
 } catch (err) {
   // Ignorar pacíficamente si dotenv no está instalado (producción pura en AAPanel)
 }
+
 
 import { configureDataContainer, DataMode, MySQLConnection } from '@abitia/data';
 import { configureServicesContainer } from '@abitia/services';
@@ -33,7 +50,7 @@ import publicRoutes from './routes/public';
 import createAuthRoutes from './routes/auth';
 import tenantRoutes from './routes/index';
 
-let dbMode: DataMode = DataMode.MySQL;
+const dbMode = process.env.DB_HOST ? DataMode.MySQL : DataMode.Local;
 configureDataContainer(dbMode);
 configureServicesContainer();
 

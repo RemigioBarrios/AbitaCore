@@ -120,9 +120,9 @@ export function multiTenantMiddleware(connection: MySQLConnection) {
       req.idCondominio = idCondominio;
       next();
     } catch (err: unknown) {
+      logger.error('Error en resolucion multi-tenant', err, 'multiTenantMiddleware');
       res.status(500).json({
-        error: 'Error en resolucion multi-tenant',
-        detail: err instanceof Error ? err.message : 'Error desconocido',
+        error: 'Error interno en resolucion multi-tenant',
       });
     }
   };

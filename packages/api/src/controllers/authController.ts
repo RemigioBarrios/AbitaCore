@@ -8,6 +8,7 @@ import {
   ICondominioRepository,
   UserCondominioOption,
   Rol,
+  logger,
 } from '@abitia/core';
 import { generateGlobalToken, generateTenantToken } from '../middleware/auth';
 
@@ -157,8 +158,8 @@ export class AuthController {
         condominios: opciones,
       });
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Error desconocido';
-      res.status(500).json({ error: message });
+      logger.error('Error en login de usuario', err, 'AuthController');
+      res.status(500).json({ error: 'Error interno del servidor' });
     }
   }
 
@@ -215,8 +216,8 @@ export class AuthController {
           : null,
       });
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Error desconocido';
-      res.status(500).json({ error: message });
+      logger.error('Error al seleccionar condominio', err, 'AuthController');
+      res.status(500).json({ error: 'Error interno del servidor' });
     }
   }
 
@@ -250,8 +251,8 @@ export class AuthController {
         })),
       });
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Error desconocido';
-      res.status(500).json({ error: message });
+      logger.error('Error en método me de usuario', err, 'AuthController');
+      res.status(500).json({ error: 'Error interno del servidor' });
     }
   }
 }

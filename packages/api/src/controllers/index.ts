@@ -11,6 +11,7 @@ import {
   ILedgerService,
   IReciboService,
   IPagoService,
+  logger,
 } from '@abitia/core';
 
 function getTenantId(req: Request): number {
@@ -31,8 +32,8 @@ export class CondominioController {
       if (!result) { res.status(404).json({ error: 'Condominio no encontrado' }); return; }
       res.json(result);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Error desconocido';
-      res.status(500).json({ error: message });
+      logger.error('Error al obtener condominio por slug', err, 'CondominioController');
+      res.status(500).json({ error: 'Error interno del servidor' });
     }
   }
 }
@@ -45,8 +46,8 @@ export class PropiedadController {
       const result = await repo.findAllByCondominio(idCondominio);
       res.json(result);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Error desconocido';
-      res.status(500).json({ error: message });
+      logger.error('Error al listar propiedades por condominio', err, 'PropiedadController');
+      res.status(500).json({ error: 'Error interno del servidor' });
     }
   }
 }
@@ -60,8 +61,8 @@ export class GastoController {
       const result = await repo.findAllByPeriod(idCondominio, periodo);
       res.json(result);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Error desconocido';
-      res.status(500).json({ error: message });
+      logger.error('Error al listar gastos por periodo', err, 'GastoController');
+      res.status(500).json({ error: 'Error interno del servidor' });
     }
   }
 
@@ -72,8 +73,8 @@ export class GastoController {
       const id = await repo.create({ ...req.body, IdCondominio: idCondominio });
       res.status(201).json({ id });
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Error desconocido';
-      res.status(500).json({ error: message });
+      logger.error('Error al crear gasto', err, 'GastoController');
+      res.status(500).json({ error: 'Error interno del servidor' });
     }
   }
 }
@@ -87,8 +88,8 @@ export class ReciboController {
       await service.emitirRecibosPeriodo(idCondominio, periodo, new Date(fechaVencimiento));
       res.status(201).json({ message: 'Recibos emitidos correctamente' });
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Error desconocido';
-      res.status(500).json({ error: message });
+      logger.error('Error al emitir recibos del periodo', err, 'ReciboController');
+      res.status(500).json({ error: 'Error interno del servidor' });
     }
   }
 
@@ -100,8 +101,8 @@ export class ReciboController {
       const result = await repo.findPendientesByPropiedad(idCondominio, idPropiedad);
       res.json(result);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Error desconocido';
-      res.status(500).json({ error: message });
+      logger.error('Error al obtener recibos pendientes', err, 'ReciboController');
+      res.status(500).json({ error: 'Error interno del servidor' });
     }
   }
 }
@@ -129,7 +130,8 @@ export class PagoController {
       } else if (message.includes('obligatorio') || message.includes('requerido')) {
         res.status(400).json({ error: message });
       } else {
-        res.status(500).json({ error: message });
+        logger.error('Error al reportar pago', err, 'PagoController');
+        res.status(500).json({ error: 'Error interno del servidor' });
       }
     }
   }
@@ -141,8 +143,8 @@ export class PagoController {
       const result = await service.getBandejaVerificacion(idCondominio);
       res.json(result);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Error desconocido';
-      res.status(500).json({ error: message });
+      logger.error('Error al obtener bandeja de verificación de pagos', err, 'PagoController');
+      res.status(500).json({ error: 'Error interno del servidor' });
     }
   }
 
@@ -173,7 +175,8 @@ export class PagoController {
       } else if (message.includes('no encontrado')) {
         res.status(404).json({ error: message });
       } else {
-        res.status(500).json({ error: message });
+        logger.error('Error al aprobar pago', err, 'PagoController');
+        res.status(500).json({ error: 'Error interno del servidor' });
       }
     }
   }
@@ -209,7 +212,8 @@ export class PagoController {
       } else if (message.includes('no encontrado')) {
         res.status(404).json({ error: message });
       } else {
-        res.status(500).json({ error: message });
+        logger.error('Error al rechazar pago', err, 'PagoController');
+        res.status(500).json({ error: 'Error interno del servidor' });
       }
     }
   }
@@ -224,8 +228,8 @@ export class LedgerController {
       const result = await repo.findByPropiedad(idCondominio, idPropiedad);
       res.json(result);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Error desconocido';
-      res.status(500).json({ error: message });
+      logger.error('Error al obtener historial del ledger', err, 'LedgerController');
+      res.status(500).json({ error: 'Error interno del servidor' });
     }
   }
 
@@ -237,8 +241,8 @@ export class LedgerController {
       const saldo = await repo.getSaldoActual(idCondominio, idPropiedad);
       res.json({ saldo });
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Error desconocido';
-      res.status(500).json({ error: message });
+      logger.error('Error al obtener saldo del ledger', err, 'LedgerController');
+      res.status(500).json({ error: 'Error interno del servidor' });
     }
   }
 }

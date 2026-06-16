@@ -8,13 +8,15 @@
     "build": "tsc",
     "dev": "ts-node src/server.ts",
     "start": "node dist/server.js",
-    "test": "jest --verbose --runInBand"
+    "test": "jest --verbose --runInBand",
+    "logs": "ts-node scripts/view-logs.ts"
   },
   "dependencies": {
     "@abitia/core": "*",
     "@abitia/services": "*",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
+    "dotenv": "^17.4.2",
     "express": "^4.19.0",
     "jsonwebtoken": "^9.0.0",
     "reflect-metadata": "^0.2.1",

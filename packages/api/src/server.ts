@@ -1,29 +1,44 @@
 import 'reflect-metadata';
-import path from 'path';
+import path from 'path'; // <-- Importación del módulo nativo para rutas
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import bcrypt from 'bcryptjs';
 
-// Carga .env.production en producción, .env en local
-const _envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env';
-require('dotenv').config({ path: require('path').join(__dirname, `../../${_envFile}`) });
+try {
+  const fs = require('fs');
+  const path = require('path');
 
+  // Apunta directamente a la carpeta donde vive el archivo actual
+  const envPath = path.join(__dirname, '.env');
+
+  if (fs.existsSync(envPath)) {
+    require('dotenv').config({ path: envPath });
+    console.log('[Abitia API] dotenv OK');
+  }
+} catch (err) {
+  // Ignorar pacíficamente si dotenv no está instalado (producción pura en AAPanel)
+}
 
 import { configureDataContainer, DataMode, MySQLConnection } from '@abitia/data';
 import { configureServicesContainer } from '@abitia/services';
 import { container } from 'tsyringe';
 import type { Pool } from 'mysql2/promise';
+import { logger } from '@abitia/core';
 import {
   hstsMiddleware,
   multiTenantMiddleware,
+  logMiddleware,
 } from './middleware';
 import publicRoutes from './routes/public';
 import createAuthRoutes from './routes/auth';
 import tenantRoutes from './routes/index';
 
-const dbMode = process.env.DB_HOST ? DataMode.MySQL : DataMode.Local;
+let dbMode: DataMode = DataMode.MySQL;
 configureDataContainer(dbMode);
 configureServicesContainer();
+
+// Loggear variables de entorno íntegramente
+logger.info('Variables de entorno cargadas íntegramente:', 'Config', process.env);
 
 const mysqlConnection = container.resolve(MySQLConnection);
 if (dbMode === DataMode.MySQL) {
@@ -34,7 +49,7 @@ if (dbMode === DataMode.MySQL) {
     password: process.env.DB_PASSWORD || '',
     database: process.env.DB_NAME || 'abitia_db',
   }).catch((err) => {
-    console.error('[Abitia API] Error al conectar a MariaDB/MySQL:', err);
+    logger.error('Error al conectar a MariaDB/MySQL', err, 'Abitia API');
   });
 }
 
@@ -42,6 +57,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.set('trust proxy', 1);
+app.use(logMiddleware);
 app.use(cors());
 app.use(express.json());
 
@@ -104,7 +120,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 // Dev seed route — crea datos de prueba para la bandeja de pagos
 app.post('/api/seed', async (_req, res) => {
   try {
-    if (dbMode === DataMode.Local) {
+    if ((dbMode as any) === DataMode.Local) {
       const { LocalStore } = require('@abitia/data');
       const store: any = container.resolve(LocalStore);
       store.reset();
@@ -191,7 +207,7 @@ app.post('/api/seed', async (_req, res) => {
 app.get('/health', (_req, res) => {
   res.json({
     status: 'ok',
-    service: 'abitia-api',
+    service: 'AbitiaCore',
     version: '0.1.0',
     hostType: _req.hostType || 'unknown',
   });
@@ -199,10 +215,14 @@ app.get('/health', (_req, res) => {
 
 app.listen(PORT, () => {
   const mode = process.env.NODE_ENV === 'production' ? 'PROD' : 'DEV';
-  console.log(`[Abitia API] Puerto ${PORT} | Modo: ${mode} | Persistencia: Local-First`);
-  console.log(`[Abitia]  abitia.co        -> Landing publico`);
-  console.log(`[Abitia]  app.abitia.app   -> Login global unificado`);
-  console.log(`[Abitia]  [slug].abitia.app -> Tenant multi-condominio`);
+  logger.info(`Puerto ${PORT} | Modo: ${mode} | Persistencia: ${dbMode}`, 'Abitia API');
+  logger.info('abitia.co        -> Landing publico', 'Abitia');
+  logger.info('app.abitia.app   -> Login global unificado', 'Abitia');
+  logger.info('[slug].abitia.app -> Tenant multi-condominio', 'Abitia');
 });
 
 export default app;
+
+function alert(arg0: string) {
+  throw new Error('Function not implemented.');
+}

@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { MySQLConnection } from '@abitia/data';
-import { ICondominioRepository } from '@abitia/core';
+import { ICondominioRepository, logger } from '@abitia/core';
 import { container } from 'tsyringe';
 
 declare global {
@@ -75,6 +75,10 @@ export function multiTenantMiddleware(connection: MySQLConnection) {
         return;
       }
 
+      if (type === 'tenant') {
+        logger.info(`Resolviendo condominio para slug: "${slug}"`, 'multiTenantMiddleware');
+      }
+
       let idCondominio = TENANT_CACHE.get(slug);
 
       if (idCondominio === undefined) {
@@ -90,8 +94,11 @@ export function multiTenantMiddleware(connection: MySQLConnection) {
 
           if (rows.length > 0) {
             found = Number(rows[0].IdCondominio);
+          } else {
+            logger.warn(`No se encontró condominio en MySQL con Subdominio_Slug: "${slug}"`, 'multiTenantMiddleware');
           }
-        } catch {
+        } catch (dbErr) {
+          logger.error(`Error al buscar condominio con slug "${slug}" en MariaDB`, dbErr, 'multiTenantMiddleware');
           // Modo Local-First: usar repositorio del contenedor DI
           const repo = container.resolve<ICondominioRepository>('ICondominioRepository');
           const condominio = await repo.findBySlug(slug);

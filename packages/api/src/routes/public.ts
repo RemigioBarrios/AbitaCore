@@ -13,7 +13,7 @@ router.get('/', (_req: Request, res: Response) => {
 });
 
 router.get('/health', (_req: Request, res: Response) => {
-  res.json({ status: 'ok', service: 'abitia-api', version: '0.1.0' });
+  res.json({ status: 'ok', service: 'AbitiaCore', version: '0.1.0' });
 });
 
 export default router;

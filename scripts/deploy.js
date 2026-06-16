@@ -201,10 +201,9 @@ async function main() {
   console.log('======================================================================');
   console.log('\nINSTRUCCIONES PARA EL SERVIDOR REMOTO:');
   console.log('1. Ubica "abitia-deploy.tar.gz" en el directorio de destino en tu servidor Linux.');
-  console.log('2. Descomprime el archivo:');
-  console.log('   tar -xzf abitia-deploy.tar.gz');
-  console.log('3. Ejecuta el script de instalación limpia y reinicio:');
+  console.log('2. Ejecuta el script de despliegue (este respaldará la versión anterior a .bak, extraerá y reiniciará):');
   console.log('   chmod +x clean-deploy.sh && ./clean-deploy.sh');
+  console.log('   (Nota: Si es el primer despliegue, descomprime manualmente usando: tar -xzf abitia-deploy.tar.gz)');
   console.log('======================================================================\n');
 }
 

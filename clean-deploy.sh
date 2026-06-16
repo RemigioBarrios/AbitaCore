@@ -32,13 +32,59 @@ if ! command -v pm2 &> /dev/null; then
     done
 fi
 
-# 2. Limpieza de node_modules duplicados
-echo "1. 🧹 Limpiando carpetas node_modules duplicadas..."
+# 2. Descompresión y Respaldo (.bak) de la versión anterior
+if [ -f "abitia-deploy.tar.gz" ]; then
+    echo "1. 📦 Creando respaldo (.bak) y descomprimiendo paquete..."
+    
+    # Eliminar respaldos previos si existen
+    rm -rf packages.bak
+    rm -rf sql.bak
+    rm -f package.json.bak
+    rm -f package-lock.json.bak
+    
+    # Renombrar versión actual a .bak si existen los directorios/archivos
+    if [ -d "packages" ]; then
+        mv packages packages.bak
+        echo "✓ Directorio 'packages' respaldado en 'packages.bak'."
+    fi
+    if [ -d "sql" ]; then
+        mv sql sql.bak
+        echo "✓ Directorio 'sql' respaldado en 'sql.bak'."
+    fi
+    if [ -f "package.json" ]; then
+        cp package.json package.json.bak
+        echo "✓ 'package.json' respaldado en 'package.json.bak'."
+    fi
+    if [ -f "package-lock.json" ]; then
+        cp package-lock.json package-lock.json.bak
+        echo "✓ 'package-lock.json' respaldado en 'package-lock.json.bak'."
+    fi
+
+    # Extraer el nuevo paquete
+    echo "📂 Descomprimiendo 'abitia-deploy.tar.gz'..."
+    if tar -xzf abitia-deploy.tar.gz; then
+        echo "✓ Descompresión exitosa."
+        rm -f abitia-deploy.tar.gz
+    else
+        echo "❌ Error al descomprimir 'abitia-deploy.tar.gz'. Restaurando respaldo..."
+        # Restaurar
+        [ -d "packages.bak" ] && rm -rf packages && mv packages.bak packages
+        [ -d "sql.bak" ] && rm -rf sql && mv sql.bak sql
+        [ -f "package.json.bak" ] && mv package.json.bak package.json
+        [ -f "package-lock.json.bak" ] && mv package-lock.json.bak package-lock.json
+        exit 1
+    fi
+else
+    echo "⚠️ No se encontró 'abitia-deploy.tar.gz' en el directorio actual. Omitiendo respaldo y descompresión."
+fi
+
+# 3. Limpieza de node_modules duplicados
+echo "2. 🧹 Limpiando carpetas node_modules duplicadas..."
 find . -name "node_modules" -type d -exec rm -rf {} +
 echo "✓ Limpieza completada."
 
-# 3. Instalación de dependencias de producción (forzando el registro oficial de npm)
-echo "2. 📦 Instalando dependencias de producción..."
+# 4. Instalación de dependencias de producción (forzando el registro oficial de npm)
+echo "3. 📦 Instalando dependencias de producción..."
 if ! $NPM_CMD ci --omit=dev --registry=https://registry.npmjs.org/; then
     echo "⚠️ 'npm ci' falló. Intentando con 'npm install --omit=dev --registry=https://registry.npmjs.org/'..."
     if ! $NPM_CMD install --omit=dev --registry=https://registry.npmjs.org/; then
@@ -49,8 +95,8 @@ if ! $NPM_CMD ci --omit=dev --registry=https://registry.npmjs.org/; then
 fi
 echo "✓ Dependencias instaladas con éxito."
 
-# 4. Reinicio del proceso en PM2
-echo "3. 🚀 Reiniciando servidor en PM2..."
+# 5. Reinicio del proceso en PM2
+echo "4. 🚀 Reiniciando servidor en PM2..."
 # Intentar reiniciar bajo el nombre 'AbitiaCore'
 if $PM2_CMD restart AbitiaCore &> /dev/null; then
     echo "✓ Servidor 'AbitiaCore' reiniciado con éxito."
